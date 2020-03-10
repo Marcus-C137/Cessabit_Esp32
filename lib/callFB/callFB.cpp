@@ -140,7 +140,7 @@ callResults callFB(callParams params, bool Debug){
                 for (int i =0 ; i<=3; i++ ){
                     results.highAlarms[i]= responseRoot["highAlarms"][i].as<double>();
                     if (Debug){
-                        char highAlarmsString[5];
+                        char highAlarmsString[6];
                         responseRoot["highAlarms"][i].prettyPrintTo(highAlarmsString, sizeof(highAlarmsString));
                         log("callFB highAlarms ith element: ");
                         log(highAlarmsString);
@@ -170,7 +170,7 @@ callResults callFB(callParams params, bool Debug){
                 for (int i =0 ; i<=3; i++ ){
                     results.alarmsMonitored[i]= responseRoot["alarmsMonitored"][i].as<bool>();
                     if (Debug){
-                        char alarmsMonitoredString[5];
+                        char alarmsMonitoredString[6];
                         responseRoot["alarmsMonitored"][i].prettyPrintTo(alarmsMonitoredString, sizeof(alarmsMonitoredString));
                         log("callFB alarmsMonitored ith element: ");
                         log(alarmsMonitoredString);

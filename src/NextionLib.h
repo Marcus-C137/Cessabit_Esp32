@@ -49,7 +49,7 @@ void nextion_setValue(String item, String val){
 void updateScreenTemps(){
     for(int i=0; i<4; i++){
         char val[16];
-        if (Temperatures[i] == 0){
+        if (Temperatures[i] == 0.0){
             nextion_setValue(tempDisplaysTxt[i],"N/A");
         }else{
             dtostrf(Temperatures[i], 5, 2,val);
@@ -59,11 +59,23 @@ void updateScreenTemps(){
     if (wifiConnected){
         long rssi = WiFi.RSSI();
         //log("RSSI = " + String(rssi));
-        if (rssi < -40) sendCommand("pic 410,0,9");
-        if (rssi < -60) sendCommand("pic 410,0,8");
-        if (rssi < -80) sendCommand("pic 410,0,7");
+        if (rssi > -45){
+            sendCommand("pic 410,0,7");
+        }else if (rssi > -55) {
+            sendCommand("pic 410,0,6");
+        }else if (rssi > -65){
+            sendCommand("pic 410,0,5");
+        } 
     }else{
-        sendCommand("pic 410,0,6");
+        sendCommand("pic 410,0,4");
+    }
+}
+
+void updateConectionInfo(){
+    if (wifiConnected) {
+        sendCommand("pic 400,07,9");
+    }else{
+        sendCommand("pic 400,07,10");
     }
 }
 
@@ -98,6 +110,11 @@ void nextion_handleEvent(uint8_t pageNo, uint8_t id, uint8_t event){
         }
     }
 
+    if(pageNo==2){
+        log("currentPage is 2");
+        currentPage = 2;
+    }
+
     if(pageNo==3){
         log("currentPage is 3");
         currentPage = 3;
@@ -118,7 +135,7 @@ void nextion_handleEvent(uint8_t pageNo, uint8_t id, uint8_t event){
         nextion_setValue("t0.txt",setTempVal);
         nextion_setValue("t1.txt",hAlarmVal);
         nextion_setValue("t2.txt",lAlarmVal);
-        
+    
     switch(id)
     {
         case 0x03:
@@ -191,7 +208,8 @@ void nextion_loop(){
      sendCommand("page 1");
     }
     
-    if (currentPage == 1) updateScreenTemps();
+    //if (currentPage == 1) updateScreenTemps();
+    //if (currentPage == 2) updateConectionInfo();
     
     if (subFromSetTemps || subFromLowAlarms || subFromHighAlarms || addToSetTemps || addToLowAlarms || addToHighAlarms){
         setScreenTimer = true;
@@ -205,10 +223,13 @@ void nextion_loop(){
         focusOnScreensTick.detach();
         focusOnScreensTick.once(1, ISR_screenFocusDone);
     }
-    
-    if(currentPage ==1 && millis() - time_nextionTempsLastUpdated>time_nextionTempsUpdate){
+    if(currentPage == 1 && millis() - time_nextionTempsLastUpdated>time_nextionTempsUpdate){
         time_nextionTempsLastUpdated = millis();
         updateScreenTemps();
+    }
+    if(currentPage == 2 && millis() - time_nextionTempsLastUpdated>time_nextionTempsUpdate){
+        time_nextionTempsLastUpdated = millis();
+        updateConectionInfo();
     }
 
     if(subFromSetTemps){

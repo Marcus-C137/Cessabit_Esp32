@@ -49,7 +49,7 @@ void loadTempsfromSpiffs(){
       JsonArray& setTemps = jObject["setTemps"];
       JsonArray& highAlarms = jObject["highAlarms"];
       JsonArray& lowAlarms = jObject["lowAlarms"];
-      JsonArray& alarmsJSON = jObject["lowAlarms"];
+      JsonArray& alarmsJSON = jObject["alarmsMonitored"];
       if (jObject.success()){
         setTemps.copyTo(setTemperatures);
         highAlarms.copyTo(highAlarmsTemps);
@@ -58,10 +58,10 @@ void loadTempsfromSpiffs(){
         if(Debug) log("sucess loading");
         for(int i=0; i<4; i++){
           if(Debug) {
-            log(String(setTemperatures[i]));
-            log(String(highAlarmsTemps[i]));
-            log(String(lowAlarmsTemps[i]));
-            log(String(alarmsMonitored[i]));
+            log("setTemperature of " + String(i) + " = " + String(setTemperatures[i]));
+            log("highAlarmsTemps of " + String(i) + " = " + String(highAlarmsTemps[i]));
+            log("lowAlarmTemps of " + String(i) + " = " + String(lowAlarmsTemps[i]));
+            log("alarmsMonitored of " + String(i) + " = " + String(alarmsMonitored[i]));
           }
         }
       }

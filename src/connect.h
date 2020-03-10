@@ -89,23 +89,26 @@ void onHandleSettingsUpdate(AsyncWebServerRequest *request)
     }
 
     DynamicJsonBuffer jBuffer;
+    JsonObject& postRequest = jBuffer.createObject();
     int params = request->params();
+    if(Debug){log("Number of Params" + String(params));}
     for(int i = 0; i<params; i++){
         AsyncWebParameter* p = request->getParam(i);
         if(p->isPost()){
             bodyRecieved = p->value();
         }
+        postRequest[p->name()] = p->value();
         if(Debug){
             log("key recieved: " + p->name());
             log("value recieved: " + p->value());
         }
     }
-    JsonObject& postJSON = jBuffer.parseObject(bodyRecieved);
-    if(postJSON.containsKey("Wifi_SSID") && postJSON.containsKey("Wifi_password")){
+    
+    if(postRequest.containsKey("Wifi_SSID") && postRequest.containsKey("Wifi_password")){
       File configFile = SPIFFS.open("/config.json", "w");
-      postJSON.printTo(configFile);
+      postRequest.printTo(configFile);
       configFile.close();
-      postJSON.prettyPrintTo(jObjectPretty);
+      postRequest.prettyPrintTo(jObjectPretty);
       if (Debug){
           log(deviceID);
       }
@@ -126,6 +129,7 @@ void onHandleSettingsUpdate(AsyncWebServerRequest *request)
 }
 
 void scanWifi(){
+    WiFi.mode(WIFI_STA);
     WiFi.softAPdisconnect(true);
     WiFi.disconnect(true, true);
     delay(100);
@@ -206,19 +210,17 @@ void wifiConnect()
       }
     }
   }
-  if (WiFi.status() == WL_CONNECTED)
-  {
+
+  //CHECK CONNECTION
+  if (WiFi.status() == WL_CONNECTED){
     digitalWrite(2,HIGH);
     wifiConnected = true;
   } else {
-    // WiFi.enableSTA(false);
-    // WiFi.enableAP(true);
-    //delay(1000);
-    WiFi.mode(WIFI_AP);
     WiFi.softAP("Cessabit");
     delay(500);
     IPAddress myIP =  WiFi.softAPIP();
-    log("AP IP address: " + String(myIP));
+    Serial.print("IN AP MODE - IP address: ");
+    Serial.println(myIP);
     wifiConnected = false;
     digitalWrite(2,LOW);     
   }

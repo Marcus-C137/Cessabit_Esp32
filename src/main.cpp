@@ -42,7 +42,7 @@ void setup() {
   delay(2000);
   Serial.begin(9600); //Debug
   Serial2.begin(9600); //Nextion
-  softSerial.begin(9600, 27, 13); //(Rx, Tx)
+  softSerial.begin(9600, 32, 33); //(Rx, Tx) Arduino
   pinMode(25, OUTPUT); //safety relay
   pinMode(25, LOW);
   SPIFFS.begin(true);
@@ -51,7 +51,7 @@ void setup() {
   loadChangedTempsOnScreenBool();
   loadNotifyOfNewDevice();
   scanWifi();
-  alarmWarmUpTick.once(300,ISR_alarmON);
+  alarmWarmUpTick.once(60,ISR_alarmON);
   pinMode(2,OUTPUT); digitalWrite(2, LOW); //led pin
   //CHIP ID
   uint64_t chipMAC = ESP.getEfuseMac();
@@ -120,13 +120,20 @@ void loop() {
       }
       _callResults=callFB(_callParams, false);
       relogIN = !_callResults.success;
+
+      if(_callResults.tempsChangedOnline){
+        writeTempstoSpiffs(_callResults.setTemps,_callResults.highAlarms,_callResults.lowAlarms, _callResults.alarmsMonitored);
+        loadTempsfromSpiffs();
+      }
     }
-    if(_callResults.tempsChangedOnline){
-      writeTempstoSpiffs(_callResults.setTemps,_callResults.highAlarms,_callResults.lowAlarms, _callResults.alarmsMonitored);
-      loadTempsfromSpiffs();
-    }
-    if((_signInResults.success == true) && (Alarm_ON_Flag == true))
+
+
+  
+
+  
+    if((_signInResults.success == true) && (Alarm_ON_Flag == true) && checkForAlarm())
     {
+      makeAlarmMask();
       for(int i=0; i<4; i++){
         _alarmCallParams.AlarmMask[i] = alarmMask[i];
         _alarmCallParams.Temperatures[i] = Temperatures[i];
@@ -136,7 +143,7 @@ void loop() {
       relogIN = !alarmSentSuccessfully;
       Alarm_ON_Flag = !alarmSentSuccessfully;
       if (alarmSentSuccessfully){
-        alarmWarmUpTick.once(600,ISR_alarmON);
+        alarmWarmUpTick.once(60,ISR_alarmON);
       }
       log("Alert sent successfully " + String(alarmSentSuccessfully));
     }
